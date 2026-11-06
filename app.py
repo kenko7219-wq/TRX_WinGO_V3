@@ -12,7 +12,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ================= CONFIG =================
+# ==================================================
+# CONFIG
+# ==================================================
 
 API_URL = os.getenv(
     "API_URL",
@@ -20,11 +22,11 @@ API_URL = os.getenv(
 )
 
 LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD", "").strip()
-SECRET_KEY = os.getenv(
-    "SECRET_KEY",
-    "CHANGE-THIS-TO-A-LONG-RANDOM-SECRET"
-)
+SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE-THIS-SECRET")
 DB_PATH = os.getenv("DB_PATH", "wingo.sqlite3")
+
+MIN_DRAWS = 10
+MAX_HISTORY = 500
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
@@ -37,7 +39,36 @@ app.config.update(
 )
 
 
-# ================= DATABASE =================
+# ==================================================
+# USER PATTERNS
+# B = BIG, S = SMALL
+# ==================================================
+
+PATTERNS = [
+    "SBSBBS", "BBSSBBSBS", "SBSBSBSBS",
+    "BBBBBBBSB", "SBSBSBSBSSS",
+    "BSSBSSSB", "BSBSBBSS", "BSSBSSBBS",
+    "BSBBSB", "BBSSBSS",
+    "SSBSBBSB", "SBBSSB", "BBSBBS",
+    "SBSSB", "BSSBBS",
+    "SSBBSBB", "BBSBSB", "SBBSBSB",
+    "SBBSB", "SBBSBSBB",
+    "SBSBSSSB", "BBSBS", "SSSBSB",
+    "BSBSSS", "BSSSBBSSSBS",
+    "SBBSSSB", "SSSSBSBB", "BBSSSB",
+    "SSBBBSBS", "BSBBSSS",
+    "BSSSSBBBBB", "SSSSBBBB",
+    "BBBBSBBBSS", "BBBSBBSS", "BBSBSSS",
+    "SBBSBBSSS", "BSBBBSSS", "BSSBBSB",
+    "SSBSBSSB", "BSSSBSBS"
+]
+
+PATTERNS = list(dict.fromkeys(PATTERNS))
+
+
+# ==================================================
+# DATABASE
+# ==================================================
 
 def db():
     con = sqlite3.connect(DB_PATH)
@@ -48,20 +79,19 @@ def db():
 def init_db():
     with db() as con:
         con.execute("""
-            CREATE TABLE IF NOT EXISTS prediction_history (
-                target_issue TEXT PRIMARY KEY,
-                predicted_side TEXT NOT NULL,
-                score INTEGER,
-                basis TEXT,
-                created_at TEXT NOT NULL,
-                result_number INTEGER,
-                actual_side TEXT,
-                status TEXT NOT NULL DEFAULT 'PENDING'
-            )
+        CREATE TABLE IF NOT EXISTS prediction_history (
+            target_issue TEXT PRIMARY KEY,
+            predicted_side TEXT NOT NULL,
+            score INTEGER,
+            basis TEXT,
+            created_at TEXT NOT NULL,
+            result_number INTEGER,
+            actual_side TEXT,
+            status TEXT DEFAULT 'PENDING'
+        )
         """)
 
 
-# IMPORTANT: Also runs when Gunicorn imports this file.
 init_db()
 
 
@@ -69,33 +99,24 @@ def utcnow():
     return datetime.now(timezone.utc)
 
 
-# ================= API DATA PARSING =================
+# ==================================================
+# API PARSER
+# ==================================================
 
-ISSUE_KEYS = (
-    "issueNumber",
-    "issue",
-    "period",
-    "issue_no",
-    "drawIssue",
-    "expect",
+ISSUE_KEYS = [
+    "issueNumber", "issue", "period",
+    "issue_no", "drawIssue", "expect",
     "periodNumber"
-)
+]
 
-NUMBER_KEYS = (
-    "number",
-    "openNumber",
-    "result",
-    "lotteryNumber",
-    "openCode",
-    "winningNumber",
-    "drawResult"
-)
+NUMBER_KEYS = [
+    "number", "openNumber", "result",
+    "lotteryNumber", "openCode",
+    "winningNumber", "drawResult"
+]
 
 
-def find_row_lists(value):
-    """
-    Search nested JSON objects for lists of result rows.
-    """
+def find_lists(value):
     found = []
 
     if isinstance(value, list):
@@ -103,11 +124,11 @@ def find_row_lists(value):
             found.append(value)
 
         for item in value:
-            found.extend(find_row_lists(item))
+            found.extend(find_lists(item))
 
     elif isinstance(value, dict):
         for child in value.values():
-            found.extend(find_row_lists(child))
+            found.extend(find_lists(child))
 
     return found
 
@@ -119,9 +140,7 @@ def parse_rows(payload):
     if not isinstance(payload, dict):
         return []
 
-    candidates = find_row_lists(payload)
-
-    # Prefer the largest list of objects.
+    candidates = find_lists(payload)
     candidates.sort(key=len, reverse=True)
 
     for rows in candidates:
@@ -135,53 +154,40 @@ def parse_rows(payload):
     return []
 
 
-def number_of(row):
+def get_issue(row):
+    for key in ISSUE_KEYS:
+        value = row.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return None
+
+
+def get_number(row):
     raw = None
 
     for key in NUMBER_KEYS:
         if row.get(key) is not None:
-            raw = row.get(key)
+            raw = str(row[key]).strip()
             break
 
     if raw is None:
         return None
 
-    # Do not accidentally read the issue number as the result.
-    text = str(raw).strip()
-
-    match = re.fullmatch(r"\d", text)
-
-    if not match:
-        # Some APIs return a result string with separators.
-        match = re.match(r"^\s*(\d)(?:[,| ]|$)", text)
+    # TRX result must be a single digit 0-9.
+    match = re.fullmatch(r"\d", raw)
 
     if not match:
         return None
 
-    try:
-        number = int(match.group(1) if match.lastindex else match.group())
-    except (ValueError, TypeError):
-        return None
+    number = int(raw)
 
     return number if 0 <= number <= 9 else None
 
 
-def issue_of(row):
-    for key in ISSUE_KEYS:
-        value = row.get(key)
-        if value is not None and str(value).strip():
-            return str(value).strip()
-
-    return None
-
-
 def fetch_history():
     headers = {
-        "Accept": "application/json, text/plain, */*",
-        "User-Agent": (
-            "Mozilla/5.0 (Linux; Android 13) "
-            "AppleWebKit/537.36 Chrome/120.0 Mobile Safari/537.36"
-        ),
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0",
         "Referer": "https://draw.ar-lottery01.com/"
     }
 
@@ -192,86 +198,120 @@ def fetch_history():
     )
 
     response.raise_for_status()
-
-    try:
-        payload = response.json()
-    except ValueError:
-        raise ValueError(
-            "API did not return JSON. "
-            f"Content-Type: {response.headers.get('Content-Type', 'unknown')}"
-        )
+    payload = response.json()
 
     rows = parse_rows(payload)
 
     if not rows:
-        if isinstance(payload, dict):
-            keys = ", ".join(list(payload.keys())[:15])
-        else:
-            keys = type(payload).__name__
+        raise ValueError("API result list not found")
 
-        raise ValueError(
-            f"Could not find result rows in API response. Top-level: {keys}"
-        )
-
-    clean = []
+    output = []
     seen = set()
 
     for row in rows:
-        number = number_of(row)
-        issue = issue_of(row)
+        issue = get_issue(row)
+        number = get_number(row)
 
-        if number is None or not issue or issue in seen:
+        if not issue or number is None or issue in seen:
             continue
 
         seen.add(issue)
 
-        color = (
-            row.get("colour")
-            or row.get("color")
-            or row.get("colorName")
-            or "—"
-        )
-
-        clean.append({
+        output.append({
             "issue": issue,
             "number": number,
             "size": "BIG" if number >= 5 else "SMALL",
-            "color": str(color)
+            "color": str(
+                row.get("colour")
+                or row.get("color")
+                or "—"
+            )
         })
 
-    if not clean:
-        raise ValueError(
-            "API rows were found, but no valid issue/number pairs were recognized."
-        )
+    if not output:
+        raise ValueError("No valid TRX results found")
 
-    return clean
+    return output[:MAX_HISTORY]
 
 
-# ================= HYBRID ANALYSIS =================
+# ==================================================
+# PATTERN MATCHING
+# ==================================================
+
+def pattern_analysis(history):
+    sides = "".join(
+        "B" if x["size"] == "BIG" else "S"
+        for x in reversed(history)
+    )
+
+    matches = []
+
+    for pattern in PATTERNS:
+        length = len(pattern)
+
+        if len(sides) <= length:
+            continue
+
+        # Find historical occurrences and their next outcome.
+        for i in range(len(sides) - length):
+            segment = sides[i:i + length]
+
+            if segment == pattern:
+                next_side = sides[i + length]
+
+                matches.append({
+                    "pattern": pattern,
+                    "next": next_side
+                })
+
+    big = sum(x["next"] == "B" for x in matches)
+    small = sum(x["next"] == "S" for x in matches)
+    total = big + small
+
+    if total:
+        probability_big = big / total
+    else:
+        probability_big = 0.5
+
+    return {
+        "matches": total,
+        "big": big,
+        "small": small,
+        "big_pct": round(probability_big * 100),
+        "small_pct": round((1 - probability_big) * 100),
+        "probability_big": probability_big
+    }
+
+
+# ==================================================
+# HYBRID ANALYSIS
+# ==================================================
 
 def hybrid_analysis(history):
+
     sides = [x["size"] for x in history]
 
-    if len(sides) < 30:
+    if len(sides) < MIN_DRAWS:
         return {
             "side": "WAIT",
             "score": None,
             "next_issue": None,
-            "basis": f"Need 30 valid draws; currently have {len(sides)}",
+            "basis": f"Need {MIN_DRAWS} draws; got {len(sides)}",
             "components": {},
             "confidence_label": "INSUFFICIENT DATA"
         }
 
     chrono = list(reversed(sides))
 
-    recent20 = chrono[-20:]
-    recent50 = chrono[-50:]
+    recent5 = chrono[-5:]
+    recent10 = chrono[-10:]
+    recent20 = chrono[-min(20, len(chrono)):]
 
-    big20 = recent20.count("BIG") / 20
-    big50 = recent50.count("BIG") / 50
+    big5 = recent5.count("BIG") / len(recent5)
+    big10 = recent10.count("BIG") / len(recent10)
+    big20 = recent20.count("BIG") / len(recent20)
 
-    current = sides[0]
-
+    # Transition analysis
     transitions = {
         "BIG": {"BIG": 0, "SMALL": 0},
         "SMALL": {"BIG": 0, "SMALL": 0}
@@ -280,14 +320,21 @@ def hybrid_analysis(history):
     for older, newer in zip(chrono[:-1], chrono[1:]):
         transitions[older][newer] += 1
 
+    current = sides[0]
     counts = transitions[current]
-    total_transitions = sum(counts.values())
+    transition_total = sum(counts.values())
 
     transition_big = (
-        counts["BIG"] / total_transitions
-        if total_transitions else 0.5
+        counts["BIG"] / transition_total
+        if transition_total else 0.5
     )
 
+    # Pattern analysis
+    pattern = pattern_analysis(history)
+
+    pattern_big = pattern["probability_big"]
+
+    # Streak
     streak_side = sides[0]
     streak = 0
 
@@ -297,19 +344,25 @@ def hybrid_analysis(history):
         streak += 1
 
     streak_bias = (
-        0.06 if streak_side == "BIG" else -0.06
+        0.04 if streak_side == "BIG" else -0.04
     ) * (0.5 if streak >= 4 else 1)
 
+    # Weighted hybrid probability
     probability_big = (
-        0.40 * big20
-        + 0.25 * big50
-        + 0.30 * transition_big
+        0.25 * big5
+        + 0.20 * big10
+        + 0.15 * big20
+        + 0.20 * transition_big
+        + 0.15 * pattern_big
         + 0.05 * (0.5 + streak_bias)
     )
 
-    score = round(max(probability_big, 1 - probability_big) * 100)
+    score = round(
+        max(probability_big, 1 - probability_big) * 100
+    )
 
-    if abs(probability_big - 0.5) >= 0.08 and score >= 58:
+    # Require meaningful separation from 50/50.
+    if abs(probability_big - 0.5) >= 0.08:
         side = "BIG" if probability_big > 0.5 else "SMALL"
     else:
         side = "WAIT"
@@ -320,24 +373,30 @@ def hybrid_analysis(history):
         next_issue = None
 
     components = {
+        "big_5_pct": round(big5 * 100),
+        "big_10_pct": round(big10 * 100),
         "big_20_pct": round(big20 * 100),
-        "big_50_pct": round(big50 * 100),
         "transition_big_pct": round(transition_big * 100),
-        "current_streak": f"{streak_side} × {streak}",
-        "sample_transitions": total_transitions
+        "pattern_big_pct": pattern["big_pct"],
+        "pattern_matches": pattern["matches"],
+        "pattern_big": pattern["big"],
+        "pattern_small": pattern["small"],
+        "current_streak": f"{streak_side} × {streak}"
     }
 
     basis = (
-        f"20-draw BIG {round(big20 * 100)}% · "
-        f"50-draw BIG {round(big50 * 100)}% · "
-        f"transition BIG {round(transition_big * 100)}% · "
-        f"streak {streak_side}×{streak}"
+        f"5 Draw {round(big5 * 100)}% | "
+        f"10 Draw {round(big10 * 100)}% | "
+        f"20 Draw {round(big20 * 100)}% | "
+        f"Transition {round(transition_big * 100)}% | "
+        f"Pattern {pattern['big_pct']}% "
+        f"({pattern['matches']} matches)"
     )
 
     label = (
-        "LOW" if score < 65
-        else "MODERATE" if score < 72
-        else "HISTORICAL EDGE"
+        "LOW SAMPLE" if len(sides) < 20
+        else "MODERATE SAMPLE" if len(sides) < 50
+        else "HISTORICAL ANALYSIS"
     )
 
     return {
@@ -350,7 +409,9 @@ def hybrid_analysis(history):
     }
 
 
-# ================= BACKTEST =================
+# ==================================================
+# BACKTEST
+# ==================================================
 
 def backtest(history):
     chrono = list(reversed(history))
@@ -360,7 +421,8 @@ def backtest(history):
     skipped = 0
     tested = []
 
-    for i in range(30, len(chrono)):
+    for i in range(MIN_DRAWS, len(chrono)):
+
         previous = list(reversed(chrono[:i]))
         prediction = hybrid_analysis(previous)
 
@@ -400,7 +462,9 @@ def backtest(history):
     }
 
 
-# ================= LOGIN =================
+# ==================================================
+# LOGIN
+# ==================================================
 
 def login_required(fn):
     @wraps(fn)
@@ -427,7 +491,7 @@ def api_login():
     if not LOGIN_PASSWORD:
         return jsonify({
             "ok": False,
-            "error": "LOGIN_PASSWORD is not configured on the server"
+            "error": "LOGIN_PASSWORD is not configured"
         }), 500
 
     if not hmac.compare_digest(supplied, LOGIN_PASSWORD):
@@ -449,19 +513,22 @@ def api_logout():
     return jsonify({"ok": True})
 
 
-# ================= DASHBOARD API =================
+# ==================================================
+# DASHBOARD
+# ==================================================
 
 @app.get("/api/dashboard")
 @login_required
 def api_dashboard():
+
     try:
         history = fetch_history()
 
         sample = history[:50]
 
         big = sum(
-            1 for item in sample
-            if item["size"] == "BIG"
+            1 for x in sample
+            if x["size"] == "BIG"
         )
 
         total = len(sample)
@@ -471,7 +538,6 @@ def api_dashboard():
 
         with db() as con:
 
-            # Settle predictions when their target issue appears.
             for result in history:
                 con.execute("""
                     UPDATE prediction_history
@@ -490,7 +556,6 @@ def api_dashboard():
                     result["issue"]
                 ))
 
-            # Save a new prediction only when there is a signal.
             if (
                 prediction.get("next_issue")
                 and prediction.get("side") in ("BIG", "SMALL")
@@ -515,41 +580,25 @@ def api_dashboard():
                 ))
 
             rows = con.execute("""
-                SELECT
-                    target_issue,
-                    predicted_side,
-                    score,
-                    basis,
-                    created_at,
-                    result_number,
-                    actual_side,
-                    status
+                SELECT *
                 FROM prediction_history
                 ORDER BY created_at DESC
                 LIMIT 100
             """).fetchall()
 
-        prediction_rows = [dict(row) for row in rows]
+        prediction_rows = [dict(x) for x in rows]
 
-        wins = sum(
-            row["status"] == "WIN"
-            for row in prediction_rows
-        )
-
-        losses = sum(
-            row["status"] == "LOSE"
-            for row in prediction_rows
-        )
-
+        wins = sum(x["status"] == "WIN" for x in prediction_rows)
+        losses = sum(x["status"] == "LOSE" for x in prediction_rows)
         settled = wins + losses
 
         trend = [
             {
-                "issue": item["issue"][-5:],
-                "big": 1 if item["size"] == "BIG" else 0,
-                "number": item["number"]
+                "issue": x["issue"][-5:],
+                "big": 1 if x["size"] == "BIG" else 0,
+                "number": x["number"]
             }
-            for item in reversed(sample)
+            for x in reversed(sample)
         ]
 
         return jsonify({
@@ -561,13 +610,10 @@ def api_dashboard():
                 "wins": wins,
                 "losses": losses,
                 "pending": sum(
-                    row["status"] == "PENDING"
-                    for row in prediction_rows
+                    x["status"] == "PENDING"
+                    for x in prediction_rows
                 ),
-                "win_rate": (
-                    round(wins / settled * 100, 1)
-                    if settled else 0
-                )
+                "win_rate": round(wins / settled * 100, 1) if settled else 0
             },
 
             "stats": {
@@ -581,37 +627,40 @@ def api_dashboard():
             "prediction": prediction,
             "backtest": bt,
             "trend": trend,
+            "pattern_analysis": pattern_analysis(history),
+            "pattern_count": len(PATTERNS),
             "updated_at": utcnow().isoformat()
         })
 
     except requests.exceptions.Timeout:
         return jsonify({
-            "error": "Live API unavailable: request timed out"
+            "error": "Live API timeout"
         }), 502
 
     except requests.exceptions.RequestException as error:
         return jsonify({
-            "error": f"Live API request failed: {str(error)[:180]}"
+            "error": f"API request failed: {str(error)[:180]}"
         }), 502
 
     except Exception as error:
         return jsonify({
-            "error": f"Live API unavailable: {str(error)[:180]}"
+            "error": f"Dashboard error: {str(error)[:180]}"
         }), 502
 
 
-# ================= HEALTH CHECK =================
+# ==================================================
+# HEALTH CHECK
+# ==================================================
 
 @app.get("/health")
 def health():
     return jsonify({
         "ok": True,
-        "service": "TRX WINGO",
+        "service": "TRX WINGO V3",
+        "patterns": len(PATTERNS),
         "time": utcnow().isoformat()
     })
 
-
-# ================= START SERVER =================
 
 if __name__ == "__main__":
     app.run(
