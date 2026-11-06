@@ -16,7 +16,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #ff9aaa;outline-offse
 .login input{width:100%;min-height:48px;padding:13px;margin:14px 0 10px;border-radius:11px;border:1px solid var(--line);background:#130b10;color:#fff}
 .err{color:#ff9baa;font-size:12px;min-height:18px;overflow-wrap:anywhere}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:17px}.brand{display:flex;align-items:center;gap:11px;min-width:0}
-.logo{width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,#ff657b,#a90f34);box-shadow:0 6px 20px #f0445e33;font-size:23px;font-weight:1000}
+.trx-logo{width:100%;height:100%;display:block}.logo{overflow:hidden;width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,#ff657b,#a90f34);box-shadow:0 6px 20px #f0445e33;font-size:23px;font-weight:1000}
 h1{font-size:19px;margin:0;line-height:1.2}.sub{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:4px}
 .actions{display:flex;align-items:center;gap:8px;flex-shrink:0}.live{font-size:11px;color:#7bf0bd;background:#10372d;border:1px solid #286d58;padding:7px 11px;border-radius:20px;white-space:nowrap}
 .logout{background:#48202c;border:1px solid #713044;padding:8px 12px;font-size:11px;min-height:36px}
@@ -24,7 +24,7 @@ h1{font-size:19px;margin:0;line-height:1.2}.sub{font-size:10px;color:var(--muted
 .cardhead{padding:13px 16px;background:#321722;border-bottom:1px solid #512535;font-weight:850;font-size:15px}.cardbody{padding:16px}
 .prediction{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center}
 .pick{min-width:0;font-size:clamp(40px,10vw,64px);font-weight:1000;text-align:center;letter-spacing:1px;padding:14px 8px;border-radius:15px;background:#34202a;color:#ffc0cb;overflow-wrap:anywhere}
-.pick.big{background:#4a1728;color:#ffb6c4}.pick.small{background:#30202a;color:#f5bdca}.pick.skip{background:#343044;color:#f1d27b}
+.pick.big{background:#4a1728;color:#ffb6c4}.pick.small{background:#30202a;color:#f5bdca}.pick.skip{background:#4a1728;color:#ffb6c4}
 .details{border-left:1px solid #633143;padding-left:18px;min-width:0}.detail{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #512535;font-size:13px}
 .detail:last-child{border:0}.detail span{color:var(--muted)}.detail b{text-align:right;overflow-wrap:anywhere}
 .tablewrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}table{width:100%;border-collapse:collapse;min-width:440px;font-size:13px}
@@ -32,10 +32,6 @@ th,td{text-align:left;padding:11px 9px;border-bottom:1px solid #482432;white-spa
 .tag{display:inline-block;padding:4px 11px;border-radius:18px;font-size:11px;font-weight:900}.tag.big{background:#4a1728;color:#ffb6c4;border:1px solid #a33a55}.tag.small{background:#30202a;color:#f5bdca;border:1px solid #805064}
 .status.win{color:var(--green);font-weight:900}.status.lose{color:#ff7188;font-weight:900}.status.pending,.status.skip{color:var(--gold);font-weight:900}
 .empty{color:var(--muted);text-align:center;padding:18px}.note{font-size:11px;color:var(--muted);padding:0 16px 14px}.foot{text-align:center;color:#a17e89;font-size:10px;margin-top:16px}
-.intro{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(ellipse at top,#501b2c,#10090d 75%);text-align:center}
-.introbox{width:min(100%,390px);padding:23px;background:var(--panel);border:1px solid #8b344c;border-radius:20px;box-shadow:0 18px 55px #0009}
-.intrologo{width:78px;height:78px;margin:0 auto 13px;border-radius:20px;background:linear-gradient(145deg,#ff657b,#a90f34);display:grid;place-items:center;font-size:28px;font-weight:1000}
-.introbox h2{margin:5px 0;font-size:20px}.introbox p{font-size:12px;color:var(--muted);line-height:1.8}
 .telegram{display:inline-block;padding:11px 15px;min-height:44px;border-radius:10px;background:#258dbb;color:white;text-decoration:none;font-weight:800;font-size:12px}
 .progress{height:5px;background:#482432;border-radius:8px;margin-top:15px;overflow:hidden}.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),#ff9aaa);animation:fill 5s linear forwards}
 @keyframes fill{to{width:100%}}
@@ -47,45 +43,113 @@ th,td{text-align:left;padding:11px 9px;border-bottom:1px solid #482432;white-spa
 <body>
 <div class="wrap">
 <section id="login" class="login">
- <div class="logo">W</div><h1>TRX WINGO <span style="color:var(--red)">V3</span></h1>
+ <div class="logo"><svg class="trx-logo" viewBox="0 0 120 120" role="img" aria-label="TRX WINGO 1 MIN logo">
+<defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5d77b"/><stop offset="1" stop-color="#9d6b22"/></linearGradient></defs>
+<rect x="3" y="3" width="114" height="114" rx="25" fill="#21151a" stroke="url(#lg)" stroke-width="5"/>
+<text x="60" y="42" text-anchor="middle" font-size="20" font-weight="900" fill="url(#lg)">TRX</text>
+<text x="60" y="70" text-anchor="middle" font-size="20" font-weight="900" fill="#fff">WINGO</text>
+<text x="60" y="94" text-anchor="middle" font-size="13" font-weight="800" letter-spacing="2" fill="url(#lg)">1 MIN</text>
+</svg></div><h1>TRX WINGO <span style="color:var(--red)">V3</span></h1>
  <p style="color:var(--muted);font-size:13px">Secure password access</p>
  <input id="password" type="password" placeholder="Enter website password" autocomplete="current-password">
  <button style="width:100%" onclick="loginNow()">UNLOCK DASHBOARD</button><div id="loginErr" class="err"></div>
 </section>
-<section id="intro" class="intro hidden"><div class="introbox">
- <div class="intrologo">W</div><h2>WELCOME TO TRX WINGO</h2><b style="color:#ffb6c4">Jame Community</b>
- <p>Predictions are based on historical results and statistical patterns only. Accuracy is not guaranteed. Play responsibly and only within your limits.</p>
- <a class="telegram" href="https://t.me/Shwelotterybyjame" target="_blank" rel="noopener">✈ OFFICIAL TELEGRAM</a>
- <p>Dashboard will open in 5 seconds...</p><div class="progress"><i></i></div>
-</div></section>
 <section id="app" class="hidden">
-<header><div class="brand"><div class="logo">W</div><div><h1>TRX WINGO <span style="color:var(--red)">V3</span></h1><div class="sub">1 MIN · PREDICTION & HISTORY</div></div></div>
+<header><div class="brand"><div class="logo"><svg class="trx-logo" viewBox="0 0 120 120" role="img" aria-label="TRX WINGO 1 MIN logo">
+<defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5d77b"/><stop offset="1" stop-color="#9d6b22"/></linearGradient></defs>
+<rect x="3" y="3" width="114" height="114" rx="25" fill="#21151a" stroke="url(#lg)" stroke-width="5"/>
+<text x="60" y="42" text-anchor="middle" font-size="20" font-weight="900" fill="url(#lg)">TRX</text>
+<text x="60" y="70" text-anchor="middle" font-size="20" font-weight="900" fill="#fff">WINGO</text>
+<text x="60" y="94" text-anchor="middle" font-size="13" font-weight="800" letter-spacing="2" fill="url(#lg)">1 MIN</text>
+</svg></div><div><h1>TRX WINGO <span style="color:var(--red)">V3</span></h1><div class="sub">1 MIN · PREDICTION & HISTORY</div></div></div>
 <div class="actions"><span class="live" id="status">● LIVE</span><button class="logout" onclick="logoutNow()">LOGOUT</button></div></header>
 <div class="card"><div class="cardhead">🎯 Next Round Prediction</div><div class="cardbody prediction">
-<div id="pick" class="pick skip">SKIP</div><div class="details">
-<div class="detail"><span>Target Issue</span><b id="nextIssue">—</b></div><div class="detail"><span>Confidence</span><b id="score">—</b></div><div class="detail"><span>Signal</span><b id="basis">Waiting for data...</b></div>
-</div></div><div class="note">SKIP means the current statistical signal is insufficient to select BIG or SMALL. Predictions are not guaranteed.</div></div>
+<div id="pick" class="pick big">BIG</div><div class="details">
+<div class="detail"><span>Target Issue</span><b id="nextIssue">—</b></div><div class="detail"><span>Confidence</span><b id="score">—</b></div><div class="detail"><span>Signal</span><b id="basis">Pattern signal</b></div>
+</div></div><div class="note">Pattern-based signal from recent results. Predictions are not guaranteed.</div></div>
 <div class="card"><div class="cardhead">🕒 Prediction History · WIN / LOSE</div><div class="tablewrap">
 <table><thead><tr><th>Target Issue</th><th>Pick</th><th>Actual Result</th><th>Status</th></tr></thead><tbody id="predictionHistory"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody></table>
-</div><div class="note">SKIP rounds are excluded from WIN / LOSE statistics.</div></div>
+</div><div class="note">Prediction history is shown for tracking only.</div></div>
 <div class="card"><div class="cardhead">📋 Recent Result History</div><div class="tablewrap">
 <table><thead><tr><th>Issue</th><th>Number</th><th>Result</th></tr></thead><tbody id="history"><tr><td colspan="3" class="empty">Loading...</td></tr></tbody></table>
 </div><div class="note" id="updated">Auto refresh every 10 seconds</div></div>
 <div class="foot">TRX WINGO V3 · Historical statistics only · No guaranteed predictions</div><div class="err" id="apiErr"></div>
 </section></div>
 <script>
-const $=id=>document.getElementById(id);let timer=null,introTimer=null;
-function showIntro(){if(introTimer)clearTimeout(introTimer);$('login').classList.add('hidden');$('app').classList.add('hidden');$('intro').classList.remove('hidden');introTimer=setTimeout(()=>{$('intro').classList.add('hidden');$('app').classList.remove('hidden');loadData();if(timer)clearInterval(timer);timer=setInterval(loadData,10000)},5000)}
-async function loginNow(){$('loginErr').textContent='Checking password...';try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('password').value})});const d=await r.json();if(!r.ok)throw Error(d.error||'Login failed');showIntro()}catch(e){$('loginErr').textContent=e.message}}
-async function logoutNow(){if(timer)clearInterval(timer);if(introTimer)clearTimeout(introTimer);try{await fetch('/api/logout',{method:'POST'})}catch(e){}$('app').classList.add('hidden');$('intro').classList.add('hidden');$('login').classList.remove('hidden');$('password').value=''}
+const $=id=>document.getElementById(id);let timer=null;
+function showDashboard(){ $('login').classList.add('hidden'); $('app').classList.remove('hidden'); loadData(); if(timer)clearInterval(timer); timer=setInterval(loadData,10000); }
+async function loginNow(){$('loginErr').textContent='Checking password...';try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('password').value})});const d=await r.json();if(!r.ok)throw Error(d.error||'Login failed');showDashboard()}catch(e){$('loginErr').textContent=e.message}}
+async function logoutNow(){if(timer)clearInterval(timer);try{await fetch('/api/logout',{method:'POST'})}catch(e){}$('app').classList.add('hidden');$('login').classList.remove('hidden');$('password').value=''}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function sideLabel(side){if(side==='WAIT'||side==='SKIP'||!side)return 'SKIP';return side}
+const USER_PATTERNS = [
+'SBSBBS',
+'BBSSBBSBS',
+'SBSBSBSBS',
+'BBBBBBBSB',
+'SBSBSBSBSSS',
+'BSSBSSSB',
+'BSBSBBSS',
+'BSSBSSBBS',
+'BSBBSB',
+'BBSSBSS',
+'SSBSBBSB',
+'SBBSSB',
+'BBSBBS',
+'SBSSB',
+'BSSBBS',
+'SSBBSBB',
+'BBSBSB',
+'SBBSBSB',
+'SBBSB',
+'SBBSBSBB',
+'SBSBSSSB',
+'BBSBS',
+'SSSBSB',
+'BSBSSS',
+'BSSSBBSSSBS',
+'SBBSSSB',
+'SSSSBSBB',
+'BBSSSB',
+'SSBBBSBS',
+'BSBBSSS',
+'BSSSSBBBBB',
+'SSSSBBBB',
+'BBBBSBBBSS',
+'BBBSBBSS',
+'BBSBSSS',
+'SBBSBBSSS',
+'BSBBBSSS',
+'BSSBBSB',
+'SSBSBSSB',
+'BSSSBSBS'
+];
+// Convert the supplied BIG/SMALL history into B/S symbols and match the
+// longest available suffix against the configured pattern list.
+function patternPick(history){
+ const seq=(history||[]).map(x=>{
+   const s=String(x.size||'').toUpperCase();
+   return s==='BIG'?'B':s==='SMALL'?'S':'';
+ }).filter(Boolean).reverse().join('');
+ let best=null;
+ for(const pattern of USER_PATTERNS){
+   if(seq.endsWith(pattern) && (!best || pattern.length>best.length)) best=pattern;
+ }
+ if(best) return best[best.length-1]==='B'?'SMALL':'BIG';
+ // Always produce a directional pick when no exact pattern is currently matched.
+ const recent=seq.slice(0,8);
+ const b=(recent.match(/B/g)||[]).length, s=(recent.match(/S/g)||[]).length;
+ return b>=s?'SMALL':'BIG';
+}
+function sideLabel(side, history){
+ const v=String(side||'').toUpperCase();
+ return patternPick(history);
+}
 async function loadData(){try{
 const r=await fetch('/api/dashboard',{cache:'no-store'});if(r.status===401){await logoutNow();return}const d=await r.json();if(!r.ok)throw Error(d.error||'API error');
-const p=d.prediction||{},side=sideLabel(p.side),pick=$('pick');pick.textContent=side;pick.className='pick '+(side==='BIG'?'big':side==='SMALL'?'small':'skip');
+const p=d.prediction||{},side=sideLabel(p.side,d.history),pick=$('pick');pick.textContent=side;pick.className='pick '+(side==='BIG'?'big':side==='SMALL'?'small':'skip');
 $('nextIssue').textContent=p.next_issue||'—';$('score').textContent=p.score===null||p.score===undefined?'—':p.score+'%';$('basis').textContent=p.basis||'—';
-const rows=d.prediction_history||[];$('predictionHistory').innerHTML=rows.length?rows.map(x=>{const pred=sideLabel(x.predicted_side),status=String(x.status||'PENDING').toUpperCase(),statusClass=status==='WIN'?'win':status==='LOSE'?'lose':status==='SKIP'?'skip':'pending',actual=x.actual_side?`${esc(x.actual_side)}${x.result_number!==undefined?' ('+esc(x.result_number)+')':''}`:'—';return `<tr><td>${esc(x.target_issue)}</td><td>${pred==='SKIP'?'<span class="tag" style="background:#493321;color:#f1d27b">SKIP</span>':`<span class="tag ${pred.toLowerCase()}">${esc(pred)}</span>`}</td><td>${actual}</td><td class="status ${statusClass}">${esc(status)}</td></tr>`}).join(''):'<tr><td colspan="4" class="empty">No prediction history yet</td></tr>';
-const history=d.history||[];$('history').innerHTML=history.slice(0,30).map(x=>{const size=x.size==='BIG'?'BIG':'SMALL';return `<tr><td>${esc(x.issue)}</td><td><b>${esc(x.number)}</b></td><td><span class="tag ${size.toLowerCase()}">${size}</span></td></tr>`}).join('')||'<tr><td colspan="3" class="empty">No result history</td></tr>';
+const rows=d.prediction_history||[];$('predictionHistory').innerHTML=rows.length?rows.map(x=>{const pred=sideLabel(x.predicted_side,d.history),status=String(x.status||'PENDING').toUpperCase(),statusClass=status==='WIN'?'win':status==='LOSE'?'lose':status==='SKIP'?'skip':'pending',actual=x.actual_side?`${esc(x.actual_side)}${x.result_number!==undefined?' ('+esc(x.result_number)+')':''}`:'—';return `<tr><td>${esc(x.target_issue)}</td><td>${`<span class="tag ${pred.toLowerCase()}">${esc(pred)}</span>`}</td><td>${actual}</td><td class="status ${statusClass}">${esc(status)}</td></tr>`}).join(''):'<tr><td colspan="4" class="empty">No prediction history yet</td></tr>';
+const history=d.history||[];$('history').innerHTML=history.slice(0,30).map(x=>{const size=String(x.size||'').toUpperCase()==='BIG'?'BIG':'SMALL';return `<tr><td>${esc(x.issue)}</td><td><b>${esc(x.number)}</b></td><td><span class="tag ${size.toLowerCase()}">${size}</span></td></tr>`}).join('')||'<tr><td colspan="3" class="empty">No result history</td></tr>';
 $('status').textContent='● LIVE';$('updated').textContent='Updated: '+new Date(d.updated_at).toLocaleTimeString()+' · Auto refresh 10s';$('apiErr').textContent=''
 }catch(e){$('status').textContent='OFFLINE';$('apiErr').textContent=e.message}}
 $('password').addEventListener('keydown',e=>{if(e.key==='Enter')loginNow()});
