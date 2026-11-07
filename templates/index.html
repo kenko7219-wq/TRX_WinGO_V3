@@ -16,7 +16,8 @@ button:focus-visible,input:focus-visible{outline:2px solid #ff9aaa;outline-offse
 .login input{width:100%;min-height:48px;padding:13px;margin:14px 0 10px;border-radius:11px;border:1px solid var(--line);background:#130b10;color:#fff}
 .err{color:#ff9baa;font-size:12px;min-height:18px;overflow-wrap:anywhere}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:17px}.brand{display:flex;align-items:center;gap:11px;min-width:0}
-.trx-logo{width:100%;height:100%;display:block}.logo{overflow:hidden;width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,#ff657b,#a90f34);box-shadow:0 6px 20px #f0445e33;font-size:23px;font-weight:1000}
+.logo{overflow:hidden;width:54px;height:54px;flex:0 0 54px;display:block;border-radius:14px;background:#16090d;box-shadow:0 6px 20px #f0445e33;border:1px solid #713044}
+.logo img{width:100%;height:100%;display:block;object-fit:cover}
 h1{font-size:19px;margin:0;line-height:1.2}.sub{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:4px}
 .actions{display:flex;align-items:center;gap:8px;flex-shrink:0}.live{font-size:11px;color:#7bf0bd;background:#10372d;border:1px solid #286d58;padding:7px 11px;border-radius:20px;white-space:nowrap}
 .logout{background:#48202c;border:1px solid #713044;padding:8px 12px;font-size:11px;min-height:36px}
@@ -32,7 +33,7 @@ th,td{text-align:left;padding:11px 9px;border-bottom:1px solid #482432;white-spa
 .tag{display:inline-block;padding:4px 11px;border-radius:18px;font-size:11px;font-weight:900}.tag.big{background:#4a1728;color:#ffb6c4;border:1px solid #a33a55}.tag.small{background:#30202a;color:#f5bdca;border:1px solid #805064}
 .status.win{color:var(--green);font-weight:900}.status.lose{color:#ff7188;font-weight:900}.status.pending,.status.skip{color:var(--gold);font-weight:900}
 .empty{color:var(--muted);text-align:center;padding:18px}.note{font-size:11px;color:var(--muted);padding:0 16px 14px}.foot{text-align:center;color:#a17e89;font-size:10px;margin-top:16px}
-@media(max-width:560px){body{padding:12px 9px calc(25px + env(safe-area-inset-bottom))}.prediction{grid-template-columns:1fr;gap:10px}.details{border-left:0;border-top:1px solid #633143;padding:8px 0 0}.cardbody{padding:12px}header{align-items:center}.brand{gap:8px}.brand .logo{width:39px;height:39px;flex-basis:39px;font-size:20px}.brand h1{font-size:15px}.sub{font-size:9px;letter-spacing:.7px}.actions{gap:5px}.live{padding:6px 8px;font-size:10px}.logout{padding:7px 9px;font-size:10px}.cardhead{font-size:14px;padding:12px 13px}.pick{font-size:clamp(42px,14vw,58px);padding:12px}.detail{font-size:12px}}
+@media(max-width:560px){body{padding:12px 9px calc(25px + env(safe-area-inset-bottom))}.prediction{grid-template-columns:1fr;gap:10px}.details{border-left:0;border-top:1px solid #633143;padding:8px 0 0}.cardbody{padding:12px}header{align-items:center}.brand{gap:8px}.logo{width:44px;height:44px;flex-basis:44px}.brand h1{font-size:15px}.sub{font-size:9px;letter-spacing:.7px}.actions{gap:5px}.live{padding:6px 8px;font-size:10px}.logout{padding:7px 9px;font-size:10px}.cardhead{font-size:14px;padding:12px 13px}.pick{font-size:clamp(42px,14vw,58px);padding:12px}.detail{font-size:12px}}
 @media(max-width:360px){header{align-items:flex-start}.brand h1{font-size:14px}.sub{font-size:8px}.live{font-size:9px;padding:5px 6px}.logout{font-size:9px;padding:6px 7px}table{font-size:12px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
 </style>
@@ -40,25 +41,14 @@ th,td{text-align:left;padding:11px 9px;border-bottom:1px solid #482432;white-spa
 <body>
 <div class="wrap">
 <section id="login" class="login">
- <div class="logo"><svg class="trx-logo" viewBox="0 0 120 120" role="img" aria-label="TRX WINGO 1 MIN logo">
-<defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5d77b"/><stop offset="1" stop-color="#9d6b22"/></linearGradient></defs>
-<rect x="3" y="3" width="114" height="114" rx="25" fill="#21151a" stroke="url(#lg1)" stroke-width="5"/>
-<text x="60" y="42" text-anchor="middle" font-size="20" font-weight="900" fill="url(#lg1)">TRX</text>
-<text x="60" y="70" text-anchor="middle" font-size="20" font-weight="900" fill="#fff">WINGO</text>
-<text x="60" y="94" text-anchor="middle" font-size="13" font-weight="800" letter-spacing="2" fill="url(#lg1)">1 MIN</text>
-</svg></div><h1>TRX WINGO <span style="color:var(--red)">V3</span></h1>
+ <div class="logo"><img src="/static/trx-wingo-logo.png" alt="TRX WINGO V3 Official Jame logo"></div>
+ <h1>TRX WINGO <span style="color:var(--red)">V3</span></h1>
  <p style="color:var(--muted);font-size:13px">Secure password access</p>
  <input id="password" type="password" placeholder="Enter website password" autocomplete="current-password">
  <button style="width:100%" onclick="loginNow()">UNLOCK DASHBOARD</button><div id="loginErr" class="err"></div>
 </section>
 <section id="app" class="hidden">
-<header><div class="brand"><div class="logo"><svg class="trx-logo" viewBox="0 0 120 120" role="img" aria-label="TRX WINGO 1 MIN logo">
-<defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5d77b"/><stop offset="1" stop-color="#9d6b22"/></linearGradient></defs>
-<rect x="3" y="3" width="114" height="114" rx="25" fill="#21151a" stroke="url(#lg2)" stroke-width="5"/>
-<text x="60" y="42" text-anchor="middle" font-size="20" font-weight="900" fill="url(#lg2)">TRX</text>
-<text x="60" y="70" text-anchor="middle" font-size="20" font-weight="900" fill="#fff">WINGO</text>
-<text x="60" y="94" text-anchor="middle" font-size="13" font-weight="800" letter-spacing="2" fill="url(#lg2)">1 MIN</text>
-</svg></div><div><h1>TRX WINGO <span style="color:var(--red)">V3</span></h1><div class="sub">1 MIN · PREDICTION & HISTORY</div></div></div>
+<header><div class="brand"><div class="logo"><img src="/static/trx-wingo-logo.png" alt="TRX WINGO V3 Official Jame logo"></div><div><h1>TRX WINGO <span style="color:var(--red)">V3</span></h1><div class="sub">1 MIN · PREDICTION & HISTORY</div></div></div>
 <div class="actions"><span class="live" id="status">● LIVE</span><button class="logout" onclick="logoutNow()">LOGOUT</button></div></header>
 <div class="card"><div class="cardhead">🎯 Next Round Prediction</div><div class="cardbody prediction">
 <div id="pick" class="pick big">BIG</div><div class="details">
@@ -112,8 +102,6 @@ function esc(v){
  }[c]));
 }
 
-// Display the exact prediction stored by the backend.
-// Do not recalculate old picks from current result history.
 function sideLabel(side){
  const v=String(side||'').trim().toUpperCase();
  if(v==='BIG'||v==='SMALL')return v;
