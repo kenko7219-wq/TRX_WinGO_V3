@@ -32,9 +32,6 @@ th,td{text-align:left;padding:11px 9px;border-bottom:1px solid #482432;white-spa
 .tag{display:inline-block;padding:4px 11px;border-radius:18px;font-size:11px;font-weight:900}.tag.big{background:#4a1728;color:#ffb6c4;border:1px solid #a33a55}.tag.small{background:#30202a;color:#f5bdca;border:1px solid #805064}
 .status.win{color:var(--green);font-weight:900}.status.lose{color:#ff7188;font-weight:900}.status.pending,.status.skip{color:var(--gold);font-weight:900}
 .empty{color:var(--muted);text-align:center;padding:18px}.note{font-size:11px;color:var(--muted);padding:0 16px 14px}.foot{text-align:center;color:#a17e89;font-size:10px;margin-top:16px}
-.telegram{display:inline-block;padding:11px 15px;min-height:44px;border-radius:10px;background:#258dbb;color:white;text-decoration:none;font-weight:800;font-size:12px}
-.progress{height:5px;background:#482432;border-radius:8px;margin-top:15px;overflow:hidden}.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),#ff9aaa);animation:fill 5s linear forwards}
-@keyframes fill{to{width:100%}}
 @media(max-width:560px){body{padding:12px 9px calc(25px + env(safe-area-inset-bottom))}.prediction{grid-template-columns:1fr;gap:10px}.details{border-left:0;border-top:1px solid #633143;padding:8px 0 0}.cardbody{padding:12px}header{align-items:center}.brand{gap:8px}.brand .logo{width:39px;height:39px;flex-basis:39px;font-size:20px}.brand h1{font-size:15px}.sub{font-size:9px;letter-spacing:.7px}.actions{gap:5px}.live{padding:6px 8px;font-size:10px}.logout{padding:7px 9px;font-size:10px}.cardhead{font-size:14px;padding:12px 13px}.pick{font-size:clamp(42px,14vw,58px);padding:12px}.detail{font-size:12px}}
 @media(max-width:360px){header{align-items:flex-start}.brand h1{font-size:14px}.sub{font-size:8px}.live{font-size:9px;padding:5px 6px}.logout{font-size:9px;padding:6px 7px}table{font-size:12px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
@@ -44,11 +41,11 @@ th,td{text-align:left;padding:11px 9px;border-bottom:1px solid #482432;white-spa
 <div class="wrap">
 <section id="login" class="login">
  <div class="logo"><svg class="trx-logo" viewBox="0 0 120 120" role="img" aria-label="TRX WINGO 1 MIN logo">
-<defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5d77b"/><stop offset="1" stop-color="#9d6b22"/></linearGradient></defs>
-<rect x="3" y="3" width="114" height="114" rx="25" fill="#21151a" stroke="url(#lg)" stroke-width="5"/>
-<text x="60" y="42" text-anchor="middle" font-size="20" font-weight="900" fill="url(#lg)">TRX</text>
+<defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5d77b"/><stop offset="1" stop-color="#9d6b22"/></linearGradient></defs>
+<rect x="3" y="3" width="114" height="114" rx="25" fill="#21151a" stroke="url(#lg1)" stroke-width="5"/>
+<text x="60" y="42" text-anchor="middle" font-size="20" font-weight="900" fill="url(#lg1)">TRX</text>
 <text x="60" y="70" text-anchor="middle" font-size="20" font-weight="900" fill="#fff">WINGO</text>
-<text x="60" y="94" text-anchor="middle" font-size="13" font-weight="800" letter-spacing="2" fill="url(#lg)">1 MIN</text>
+<text x="60" y="94" text-anchor="middle" font-size="13" font-weight="800" letter-spacing="2" fill="url(#lg1)">1 MIN</text>
 </svg></div><h1>TRX WINGO <span style="color:var(--red)">V3</span></h1>
  <p style="color:var(--muted);font-size:13px">Secure password access</p>
  <input id="password" type="password" placeholder="Enter website password" autocomplete="current-password">
@@ -56,11 +53,11 @@ th,td{text-align:left;padding:11px 9px;border-bottom:1px solid #482432;white-spa
 </section>
 <section id="app" class="hidden">
 <header><div class="brand"><div class="logo"><svg class="trx-logo" viewBox="0 0 120 120" role="img" aria-label="TRX WINGO 1 MIN logo">
-<defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5d77b"/><stop offset="1" stop-color="#9d6b22"/></linearGradient></defs>
-<rect x="3" y="3" width="114" height="114" rx="25" fill="#21151a" stroke="url(#lg)" stroke-width="5"/>
-<text x="60" y="42" text-anchor="middle" font-size="20" font-weight="900" fill="url(#lg)">TRX</text>
+<defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5d77b"/><stop offset="1" stop-color="#9d6b22"/></linearGradient></defs>
+<rect x="3" y="3" width="114" height="114" rx="25" fill="#21151a" stroke="url(#lg2)" stroke-width="5"/>
+<text x="60" y="42" text-anchor="middle" font-size="20" font-weight="900" fill="url(#lg2)">TRX</text>
 <text x="60" y="70" text-anchor="middle" font-size="20" font-weight="900" fill="#fff">WINGO</text>
-<text x="60" y="94" text-anchor="middle" font-size="13" font-weight="800" letter-spacing="2" fill="url(#lg)">1 MIN</text>
+<text x="60" y="94" text-anchor="middle" font-size="13" font-weight="800" letter-spacing="2" fill="url(#lg2)">1 MIN</text>
 </svg></div><div><h1>TRX WINGO <span style="color:var(--red)">V3</span></h1><div class="sub">1 MIN · PREDICTION & HISTORY</div></div></div>
 <div class="actions"><span class="live" id="status">● LIVE</span><button class="logout" onclick="logoutNow()">LOGOUT</button></div></header>
 <div class="card"><div class="cardhead">🎯 Next Round Prediction</div><div class="cardbody prediction">
@@ -76,82 +73,112 @@ th,td{text-align:left;padding:11px 9px;border-bottom:1px solid #482432;white-spa
 <div class="foot">TRX WINGO V3 · Historical statistics only · No guaranteed predictions</div><div class="err" id="apiErr"></div>
 </section></div>
 <script>
-const $=id=>document.getElementById(id);let timer=null;
-function showDashboard(){ $('login').classList.add('hidden'); $('app').classList.remove('hidden'); loadData(); if(timer)clearInterval(timer); timer=setInterval(loadData,10000); }
-async function loginNow(){$('loginErr').textContent='Checking password...';try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('password').value})});const d=await r.json();if(!r.ok)throw Error(d.error||'Login failed');showDashboard()}catch(e){$('loginErr').textContent=e.message}}
-async function logoutNow(){if(timer)clearInterval(timer);try{await fetch('/api/logout',{method:'POST'})}catch(e){}$('app').classList.add('hidden');$('login').classList.remove('hidden');$('password').value=''}
-function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-const USER_PATTERNS = [
-'SBSBBS',
-'BBSSBBSBS',
-'SBSBSBSBS',
-'BBBBBBBSB',
-'SBSBSBSBSSS',
-'BSSBSSSB',
-'BSBSBBSS',
-'BSSBSSBBS',
-'BSBBSB',
-'BBSSBSS',
-'SSBSBBSB',
-'SBBSSB',
-'BBSBBS',
-'SBSSB',
-'BSSBBS',
-'SSBBSBB',
-'BBSBSB',
-'SBBSBSB',
-'SBBSB',
-'SBBSBSBB',
-'SBSBSSSB',
-'BBSBS',
-'SSSBSB',
-'BSBSSS',
-'BSSSBBSSSBS',
-'SBBSSSB',
-'SSSSBSBB',
-'BBSSSB',
-'SSBBBSBS',
-'BSBBSSS',
-'BSSSSBBBBB',
-'SSSSBBBB',
-'BBBBSBBBSS',
-'BBBSBBSS',
-'BBSBSSS',
-'SBBSBBSSS',
-'BSBBBSSS',
-'BSSBBSB',
-'SSBSBSSB',
-'BSSSBSBS'
-];
-// Convert the supplied BIG/SMALL history into B/S symbols and match the
-// longest available suffix against the configured pattern list.
-function patternPick(history){
- const seq=(history||[]).map(x=>{
-   const s=String(x.size||'').toUpperCase();
-   return s==='BIG'?'B':s==='SMALL'?'S':'';
- }).filter(Boolean).reverse().join('');
- let best=null;
- for(const pattern of USER_PATTERNS){
-   if(seq.endsWith(pattern) && (!best || pattern.length>best.length)) best=pattern;
+const $=id=>document.getElementById(id);
+let timer=null;
+
+function showDashboard(){
+ $('login').classList.add('hidden');
+ $('app').classList.remove('hidden');
+ loadData();
+ if(timer)clearInterval(timer);
+ timer=setInterval(loadData,10000);
+}
+
+async function loginNow(){
+ $('loginErr').textContent='Checking password...';
+ try{
+  const r=await fetch('/api/login',{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({password:$('password').value})
+  });
+  const d=await r.json();
+  if(!r.ok)throw Error(d.error||'Login failed');
+  showDashboard();
+ }catch(e){$('loginErr').textContent=e.message;}
+}
+
+async function logoutNow(){
+ if(timer)clearInterval(timer);
+ try{await fetch('/api/logout',{method:'POST'});}catch(e){}
+ $('app').classList.add('hidden');
+ $('login').classList.remove('hidden');
+ $('password').value='';
+}
+
+function esc(v){
+ return String(v??'').replace(/[&<>"']/g,c=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+ }[c]));
+}
+
+// Display the exact prediction stored by the backend.
+// Do not recalculate old picks from current result history.
+function sideLabel(side){
+ const v=String(side||'').trim().toUpperCase();
+ if(v==='BIG'||v==='SMALL')return v;
+ return 'SKIP';
+}
+
+async function loadData(){
+ try{
+  const r=await fetch('/api/dashboard',{cache:'no-store'});
+  if(r.status===401){await logoutNow();return;}
+  const d=await r.json();
+  if(!r.ok)throw Error(d.error||'API error');
+
+  const p=d.prediction||{};
+  const side=sideLabel(p.side);
+  const pick=$('pick');
+  pick.textContent=side;
+  pick.className='pick '+(side==='BIG'?'big':side==='SMALL'?'small':'skip');
+
+  $('nextIssue').textContent=p.next_issue||'—';
+  $('score').textContent=p.score===null||p.score===undefined?'—':p.score+'%';
+  $('basis').textContent=p.basis||'—';
+
+  const rows=d.prediction_history||[];
+  $('predictionHistory').innerHTML=rows.length?rows.map(x=>{
+   const pred=sideLabel(x.predicted_side);
+   const status=String(x.status||'PENDING').toUpperCase();
+   const statusClass=status==='WIN'?'win':status==='LOSE'?'lose':status==='SKIP'?'skip':'pending';
+   const actual=x.actual_side
+    ?`${esc(x.actual_side)}${x.result_number!==null&&x.result_number!==undefined?' ('+esc(x.result_number)+')':''}`
+    :'—';
+
+   return `<tr>
+    <td>${esc(x.target_issue)}</td>
+    <td>${pred==='SKIP'
+      ?'<span class="tag">SKIP</span>'
+      :`<span class="tag ${pred.toLowerCase()}">${esc(pred)}</span>`}
+    </td>
+    <td>${actual}</td>
+    <td class="status ${statusClass}">${esc(status)}</td>
+   </tr>`;
+  }).join(''):'<tr><td colspan="4" class="empty">No prediction history yet</td></tr>';
+
+  const history=d.history||[];
+  $('history').innerHTML=history.slice(0,30).map(x=>{
+   const size=String(x.size||'').trim().toUpperCase()==='BIG'?'BIG':'SMALL';
+   return `<tr>
+    <td>${esc(x.issue)}</td>
+    <td><b>${esc(x.number)}</b></td>
+    <td><span class="tag ${size.toLowerCase()}">${size}</span></td>
+   </tr>`;
+  }).join('')||'<tr><td colspan="3" class="empty">No result history</td></tr>';
+
+  $('status').textContent='● LIVE';
+  $('updated').textContent='Updated: '+new Date(d.updated_at).toLocaleTimeString()+' · Auto refresh 10s';
+  $('apiErr').textContent='';
+ }catch(e){
+  $('status').textContent='OFFLINE';
+  $('apiErr').textContent=e.message;
  }
- if(best) return best[best.length-1]==='B'?'SMALL':'BIG';
- // Always produce a directional pick when no exact pattern is currently matched.
- const recent=seq.slice(0,8);
- const b=(recent.match(/B/g)||[]).length, s=(recent.match(/S/g)||[]).length;
- return b>=s?'SMALL':'BIG';
 }
-function sideLabel(side, history){
- const v=String(side||'').toUpperCase();
- return patternPick(history);
-}
-async function loadData(){try{
-const r=await fetch('/api/dashboard',{cache:'no-store'});if(r.status===401){await logoutNow();return}const d=await r.json();if(!r.ok)throw Error(d.error||'API error');
-const p=d.prediction||{},side=sideLabel(p.side,d.history),pick=$('pick');pick.textContent=side;pick.className='pick '+(side==='BIG'?'big':side==='SMALL'?'small':'skip');
-$('nextIssue').textContent=p.next_issue||'—';$('score').textContent=p.score===null||p.score===undefined?'—':p.score+'%';$('basis').textContent=p.basis||'—';
-const rows=d.prediction_history||[];$('predictionHistory').innerHTML=rows.length?rows.map(x=>{const pred=sideLabel(x.predicted_side,d.history),status=String(x.status||'PENDING').toUpperCase(),statusClass=status==='WIN'?'win':status==='LOSE'?'lose':status==='SKIP'?'skip':'pending',actual=x.actual_side?`${esc(x.actual_side)}${x.result_number!==undefined?' ('+esc(x.result_number)+')':''}`:'—';return `<tr><td>${esc(x.target_issue)}</td><td>${`<span class="tag ${pred.toLowerCase()}">${esc(pred)}</span>`}</td><td>${actual}</td><td class="status ${statusClass}">${esc(status)}</td></tr>`}).join(''):'<tr><td colspan="4" class="empty">No prediction history yet</td></tr>';
-const history=d.history||[];$('history').innerHTML=history.slice(0,30).map(x=>{const size=String(x.size||'').toUpperCase()==='BIG'?'BIG':'SMALL';return `<tr><td>${esc(x.issue)}</td><td><b>${esc(x.number)}</b></td><td><span class="tag ${size.toLowerCase()}">${size}</span></td></tr>`}).join('')||'<tr><td colspan="3" class="empty">No result history</td></tr>';
-$('status').textContent='● LIVE';$('updated').textContent='Updated: '+new Date(d.updated_at).toLocaleTimeString()+' · Auto refresh 10s';$('apiErr').textContent=''
-}catch(e){$('status').textContent='OFFLINE';$('apiErr').textContent=e.message}}
-$('password').addEventListener('keydown',e=>{if(e.key==='Enter')loginNow()});
+
+$('password').addEventListener('keydown',e=>{
+ if(e.key==='Enter')loginNow();
+});
 </script>
-</body></html>
+</body>
+</html>
