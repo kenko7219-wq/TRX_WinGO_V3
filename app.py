@@ -1,10 +1,10 @@
-
 import os
 import re
 import sqlite3
 import hmac
 from datetime import datetime, timedelta, timezone
 from functools import wraps
+from contextlib import closing
 
 import requests
 from flask import Flask, request, jsonify, session, render_template
@@ -20,7 +20,6 @@ API_URL = os.getenv(
     "API_URL",
     "https://draw.ar-lottery01.com/TrxWinGo/TrxWinGo_1M/GetHistoryIssuePage.json"
 )
-
 LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD", "").strip()
 SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE-THIS-SECRET")
 DB_PATH = os.getenv("DB_PATH", "wingo.sqlite3")
@@ -30,7 +29,6 @@ MAX_HISTORY = 500
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
-
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
@@ -38,10 +36,8 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=timedelta(hours=12)
 )
 
-
 # ==================================================
-# USER PATTERNS
-# B = BIG, S = SMALL
+# USER PATTERNS: B = BIG, S = SMALL
 # ==================================================
 
 PATTERNS = [
@@ -62,87 +58,94 @@ PATTERNS = [
     "SBBSBBSSS", "BSBBBSSS", "BSSBBSB",
     "SSBSBSSB", "BSSSBSBS"
 ]
-
 PATTERNS = list(dict.fromkeys(PATTERNS))
-
 
 # ==================================================
 # DATABASE
 # ==================================================
 
 def db():
-    con = sqlite3.connect(DB_PATH)
+    con = sqlite3.connect(DB_PATH, timeout=20)
     con.row_factory = sqlite3.Row
+    con.execute("PRAGMA busy_timeout = 20000")
     return con
-
-
-def init_db():
-    with db() as con:
-        con.execute("""
-        CREATE TABLE IF NOT EXISTS prediction_history (
-            target_issue TEXT PRIMARY KEY,
-            predicted_side TEXT NOT NULL,
-            score INTEGER,
-            basis TEXT,
-            created_at TEXT NOT NULL,
-            result_number INTEGER,
-            actual_side TEXT,
-            status TEXT DEFAULT 'PENDING'
-        )
-        """)
-
-
-init_db()
 
 
 def utcnow():
     return datetime.now(timezone.utc)
 
 
+def init_db():
+    with closing(db()) as con:
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS prediction_history (
+                target_issue TEXT PRIMARY KEY,
+                predicted_side TEXT NOT NULL,
+                score INTEGER,
+                basis TEXT,
+                created_at TEXT NOT NULL,
+                result_number INTEGER,
+                actual_side TEXT,
+                status TEXT NOT NULL DEFAULT 'PENDING'
+            )
+        """)
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS app_state (
+                state_key TEXT PRIMARY KEY,
+                state_value TEXT NOT NULL
+            )
+        """)
+        # One-time clean start: old prediction rows are removed only once.
+        # The marker prevents the history from being erased on every restart.
+        marker = con.execute(
+            "SELECT state_value FROM app_state WHERE state_key = 'fresh_tracking_v1'"
+        ).fetchone()
+        if marker is None:
+            con.execute("DELETE FROM prediction_history")
+            con.execute("""
+                INSERT INTO app_state (state_key, state_value)
+                VALUES ('fresh_tracking_v1', '1')
+            """)
+        con.commit()
+
+
+init_db()
+
 # ==================================================
 # API PARSER
 # ==================================================
 
 ISSUE_KEYS = [
-    "issueNumber", "issue", "period",
-    "issue_no", "drawIssue", "expect",
-    "periodNumber"
+    "issueNumber", "issue", "period", "issue_no",
+    "drawIssue", "expect", "periodNumber"
 ]
-
 NUMBER_KEYS = [
-    "number", "openNumber", "result",
-    "lotteryNumber", "openCode",
-    "winningNumber", "drawResult"
+    "number", "openNumber", "result", "lotteryNumber",
+    "openCode", "winningNumber", "drawResult"
 ]
 
 
 def find_lists(value):
     found = []
-
     if isinstance(value, list):
         if value and all(isinstance(x, dict) for x in value):
             found.append(value)
-
         for item in value:
             found.extend(find_lists(item))
-
     elif isinstance(value, dict):
         for child in value.values():
             found.extend(find_lists(child))
-
     return found
 
 
 def parse_rows(payload):
     if isinstance(payload, list):
         return payload
-
     if not isinstance(payload, dict):
         return []
 
     candidates = find_lists(payload)
     candidates.sort(key=len, reverse=True)
-
     for rows in candidates:
         if rows and any(
             any(k in row for k in ISSUE_KEYS)
@@ -150,7 +153,6 @@ def parse_rows(payload):
             for row in rows
         ):
             return rows
-
     return []
 
 
@@ -164,114 +166,72 @@ def get_issue(row):
 
 def get_number(row):
     raw = None
-
     for key in NUMBER_KEYS:
         if row.get(key) is not None:
             raw = str(row[key]).strip()
             break
-
-    if raw is None:
+    if raw is None or not re.fullmatch(r"\d", raw):
         return None
-
-    # TRX result must be a single digit 0-9.
-    match = re.fullmatch(r"\d", raw)
-
-    if not match:
-        return None
-
     number = int(raw)
-
     return number if 0 <= number <= 9 else None
 
 
 def fetch_history():
-    headers = {
-        "Accept": "application/json",
-        "User-Agent": "Mozilla/5.0",
-        "Referer": "https://draw.ar-lottery01.com/"
-    }
-
     response = requests.get(
         API_URL,
-        headers=headers,
+        headers={
+            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0",
+            "Referer": "https://draw.ar-lottery01.com/"
+        },
         timeout=20
     )
-
     response.raise_for_status()
-    payload = response.json()
-
-    rows = parse_rows(payload)
-
+    rows = parse_rows(response.json())
     if not rows:
         raise ValueError("API result list not found")
 
-    output = []
-    seen = set()
-
+    output, seen = [], set()
     for row in rows:
         issue = get_issue(row)
         number = get_number(row)
-
         if not issue or number is None or issue in seen:
             continue
-
         seen.add(issue)
-
         output.append({
             "issue": issue,
             "number": number,
             "size": "BIG" if number >= 5 else "SMALL",
-            "color": str(
-                row.get("colour")
-                or row.get("color")
-                or "—"
-            )
+            "color": str(row.get("colour") or row.get("color") or "—")
         })
 
     if not output:
         raise ValueError("No valid TRX results found")
-
     return output[:MAX_HISTORY]
 
 
 # ==================================================
-# PATTERN MATCHING
+# PATTERN ANALYSIS
 # ==================================================
 
 def pattern_analysis(history):
     sides = "".join(
-        "B" if x["size"] == "BIG" else "S"
-        for x in reversed(history)
+        "B" if item["size"] == "BIG" else "S"
+        for item in reversed(history)
     )
-
     matches = []
-
     for pattern in PATTERNS:
         length = len(pattern)
-
         if len(sides) <= length:
             continue
-
-        # Find historical occurrences and their next outcome.
         for i in range(len(sides) - length):
-            segment = sides[i:i + length]
+            if sides[i:i + length] == pattern:
+                matches.append({"pattern": pattern, "next": sides[i + length]})
 
-            if segment == pattern:
-                next_side = sides[i + length]
-
-                matches.append({
-                    "pattern": pattern,
-                    "next": next_side
-                })
-
-    big = sum(x["next"] == "B" for x in matches)
-    small = sum(x["next"] == "S" for x in matches)
+    big = sum(item["next"] == "B" for item in matches)
+    small = sum(item["next"] == "S" for item in matches)
     total = big + small
-
-    if total:
-        probability_big = big / total
-    else:
-        probability_big = 0.5
+    probability_big = big / total if total else 0.5
 
     return {
         "matches": total,
@@ -288,9 +248,7 @@ def pattern_analysis(history):
 # ==================================================
 
 def hybrid_analysis(history):
-
-    sides = [x["size"] for x in history]
-
+    sides = [item["size"] for item in history]
     if len(sides) < MIN_DRAWS:
         return {
             "side": "WAIT",
@@ -302,7 +260,6 @@ def hybrid_analysis(history):
         }
 
     chrono = list(reversed(sides))
-
     recent5 = chrono[-5:]
     recent10 = chrono[-10:]
     recent20 = chrono[-min(20, len(chrono)):]
@@ -311,43 +268,32 @@ def hybrid_analysis(history):
     big10 = recent10.count("BIG") / len(recent10)
     big20 = recent20.count("BIG") / len(recent20)
 
-    # Transition analysis
     transitions = {
         "BIG": {"BIG": 0, "SMALL": 0},
         "SMALL": {"BIG": 0, "SMALL": 0}
     }
-
     for older, newer in zip(chrono[:-1], chrono[1:]):
         transitions[older][newer] += 1
 
     current = sides[0]
     counts = transitions[current]
     transition_total = sum(counts.values())
+    transition_big = counts["BIG"] / transition_total if transition_total else 0.5
 
-    transition_big = (
-        counts["BIG"] / transition_total
-        if transition_total else 0.5
-    )
-
-    # Pattern analysis
     pattern = pattern_analysis(history)
-
     pattern_big = pattern["probability_big"]
 
-    # Streak
     streak_side = sides[0]
     streak = 0
-
     for side in sides:
         if side != streak_side:
             break
         streak += 1
 
-    streak_bias = (
-        0.04 if streak_side == "BIG" else -0.04
-    ) * (0.5 if streak >= 4 else 1)
+    streak_bias = (0.04 if streak_side == "BIG" else -0.04) * (
+        0.5 if streak >= 4 else 1
+    )
 
-    # Weighted hybrid probability
     probability_big = (
         0.25 * big5
         + 0.20 * big10
@@ -356,12 +302,8 @@ def hybrid_analysis(history):
         + 0.15 * pattern_big
         + 0.05 * (0.5 + streak_bias)
     )
+    score = round(max(probability_big, 1 - probability_big) * 100)
 
-    score = round(
-        max(probability_big, 1 - probability_big) * 100
-    )
-
-    # Require meaningful separation from 50/50.
     if abs(probability_big - 0.5) >= 0.08:
         side = "BIG" if probability_big > 0.5 else "SMALL"
     else:
@@ -383,22 +325,18 @@ def hybrid_analysis(history):
         "pattern_small": pattern["small"],
         "current_streak": f"{streak_side} × {streak}"
     }
-
     basis = (
         f"5 Draw {round(big5 * 100)}% | "
         f"10 Draw {round(big10 * 100)}% | "
         f"20 Draw {round(big20 * 100)}% | "
         f"Transition {round(transition_big * 100)}% | "
-        f"Pattern {pattern['big_pct']}% "
-        f"({pattern['matches']} matches)"
+        f"Pattern {pattern['big_pct']}% ({pattern['matches']} matches)"
     )
-
     label = (
         "LOW SAMPLE" if len(sides) < 20
         else "MODERATE SAMPLE" if len(sides) < 50
         else "HISTORICAL ANALYSIS"
     )
-
     return {
         "side": side,
         "score": score,
@@ -415,34 +353,23 @@ def hybrid_analysis(history):
 
 def backtest(history):
     chrono = list(reversed(history))
-
-    wins = 0
-    losses = 0
-    skipped = 0
+    wins = losses = skipped = 0
     tested = []
 
     for i in range(MIN_DRAWS, len(chrono)):
-
         previous = list(reversed(chrono[:i]))
         prediction = hybrid_analysis(previous)
-
         actual = chrono[i]["size"]
 
-        if prediction["side"] == "WAIT":
+        if prediction["side"] not in ("BIG", "SMALL"):
             skipped += 1
             continue
 
-        status = (
-            "WIN"
-            if prediction["side"] == actual
-            else "LOSE"
-        )
-
+        status = "WIN" if prediction["side"] == actual else "LOSE"
         if status == "WIN":
             wins += 1
         else:
             losses += 1
-
         tested.append({
             "issue": chrono[i]["issue"],
             "pick": prediction["side"],
@@ -451,7 +378,6 @@ def backtest(history):
         })
 
     settled = wins + losses
-
     return {
         "wins": wins,
         "losses": losses,
@@ -472,9 +398,7 @@ def login_required(fn):
         if not session.get("authenticated"):
             session.clear()
             return jsonify({"error": "Login required"}), 401
-
         return fn(*args, **kwargs)
-
     return wrapper
 
 
@@ -495,15 +419,11 @@ def api_login():
         }), 500
 
     if not hmac.compare_digest(supplied, LOGIN_PASSWORD):
-        return jsonify({
-            "ok": False,
-            "error": "Incorrect password"
-        }), 401
+        return jsonify({"ok": False, "error": "Incorrect password"}), 401
 
     session.clear()
     session.permanent = True
     session["authenticated"] = True
-
     return jsonify({"ok": True})
 
 
@@ -520,24 +440,18 @@ def api_logout():
 @app.get("/api/dashboard")
 @login_required
 def api_dashboard():
-
     try:
         history = fetch_history()
-
         sample = history[:50]
-
-        big = sum(
-            1 for x in sample
-            if x["size"] == "BIG"
-        )
-
+        big = sum(item["size"] == "BIG" for item in sample)
         total = len(sample)
 
         prediction = hybrid_analysis(history)
         bt = backtest(history)
 
-        with db() as con:
-
+        with closing(db()) as con:
+            # Settle only a matching pending prediction.
+            # The stored prediction is never recalculated during settlement.
             for result in history:
                 con.execute("""
                     UPDATE prediction_history
@@ -548,7 +462,8 @@ def api_dashboard():
                             ELSE 'LOSE'
                         END
                     WHERE target_issue = ?
-                    AND status = 'PENDING'
+                      AND status = 'PENDING'
+                      AND predicted_side IN ('BIG', 'SMALL')
                 """, (
                     result["number"],
                     result["size"],
@@ -556,20 +471,14 @@ def api_dashboard():
                     result["issue"]
                 ))
 
+            # Save one prediction for the next issue only.
             if (
                 prediction.get("next_issue")
                 and prediction.get("side") in ("BIG", "SMALL")
             ):
                 con.execute("""
                     INSERT OR IGNORE INTO prediction_history
-                    (
-                        target_issue,
-                        predicted_side,
-                        score,
-                        basis,
-                        created_at,
-                        status
-                    )
+                    (target_issue, predicted_side, score, basis, created_at, status)
                     VALUES (?, ?, ?, ?, ?, 'PENDING')
                 """, (
                     prediction["next_issue"],
@@ -585,37 +494,32 @@ def api_dashboard():
                 ORDER BY created_at DESC
                 LIMIT 100
             """).fetchall()
+            con.commit()
 
-        prediction_rows = [dict(x) for x in rows]
-
-        wins = sum(x["status"] == "WIN" for x in prediction_rows)
-        losses = sum(x["status"] == "LOSE" for x in prediction_rows)
+        prediction_rows = [dict(row) for row in rows]
+        wins = sum(row["status"] == "WIN" for row in prediction_rows)
+        losses = sum(row["status"] == "LOSE" for row in prediction_rows)
         settled = wins + losses
 
         trend = [
             {
-                "issue": x["issue"][-5:],
-                "big": 1 if x["size"] == "BIG" else 0,
-                "number": x["number"]
+                "issue": item["issue"][-5:],
+                "big": 1 if item["size"] == "BIG" else 0,
+                "number": item["number"]
             }
-            for x in reversed(sample)
+            for item in reversed(sample)
         ]
 
         return jsonify({
             "ok": True,
             "history": history[:50],
             "prediction_history": prediction_rows,
-
             "prediction_stats": {
                 "wins": wins,
                 "losses": losses,
-                "pending": sum(
-                    x["status"] == "PENDING"
-                    for x in prediction_rows
-                ),
+                "pending": sum(row["status"] == "PENDING" for row in prediction_rows),
                 "win_rate": round(wins / settled * 100, 1) if settled else 0
             },
-
             "stats": {
                 "total": total,
                 "big": big,
@@ -623,7 +527,6 @@ def api_dashboard():
                 "big_pct": round(big / total * 100) if total else 0,
                 "small_pct": round((total - big) / total * 100) if total else 0
             },
-
             "prediction": prediction,
             "backtest": bt,
             "trend": trend,
@@ -633,19 +536,12 @@ def api_dashboard():
         })
 
     except requests.exceptions.Timeout:
-        return jsonify({
-            "error": "Live API timeout"
-        }), 502
-
+        return jsonify({"error": "Live API timeout"}), 502
     except requests.exceptions.RequestException as error:
-        return jsonify({
-            "error": f"API request failed: {str(error)[:180]}"
-        }), 502
-
+        return jsonify({"error": f"API request failed: {str(error)[:180]}"}), 502
     except Exception as error:
-        return jsonify({
-            "error": f"Dashboard error: {str(error)[:180]}"
-        }), 502
+        app.logger.exception("Dashboard error")
+        return jsonify({"error": f"Dashboard error: {str(error)[:180]}"}), 502
 
 
 # ==================================================
